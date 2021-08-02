@@ -30,12 +30,13 @@ def _worker(
                 if done:
                     # save final observation where user can get it, then reset
                     info["terminal_observation"] = observation
-                    observation = env.reset()
+                    # observation = env.reset(data)
+                    env.reset(data) # do not use reset observation for done
                 remote.send((observation, reward, done, info))
             elif cmd == "seed":
                 remote.send(env.seed(data))
             elif cmd == "reset":
-                observation = env.reset()
+                observation = env.reset(data)
                 remote.send(observation)
             elif cmd == "render":
                 remote.send(env.render(data))
@@ -48,6 +49,9 @@ def _worker(
             elif cmd == "env_method":
                 method = getattr(env, data[0])
                 remote.send(method(*data[1], **data[2]))
+            elif cmd == "env_method_arg":
+                method = getattr(env, data[0])
+                remote.send(method(*data[1]))
             elif cmd == "get_attr":
                 remote.send(getattr(env, data))
             elif cmd == "set_attr":
@@ -127,9 +131,9 @@ class SubprocVecEnv(VecEnv):
             remote.send(("seed", seed + idx))
         return [remote.recv() for remote in self.remotes]
 
-    def reset(self) -> VecEnvObs:
+    def reset(self, **kwargs) -> VecEnvObs:
         for remote in self.remotes:
-            remote.send(("reset", None))
+            remote.send(("reset", kwargs))
         obs = [remote.recv() for remote in self.remotes]
         return _flatten_obs(obs, self.observation_space)
 
@@ -173,6 +177,14 @@ class SubprocVecEnv(VecEnv):
         target_remotes = self._get_target_remotes(indices)
         for remote in target_remotes:
             remote.send(("env_method", (method_name, method_args, method_kwargs)))
+        return [remote.recv() for remote in target_remotes]
+
+    # New
+    def env_method_arg(self, method_name: str, method_args_list, indices: VecEnvIndices = None) -> List[Any]:
+        """Call instance methods of vectorized environments."""
+        target_remotes = self._get_target_remotes(indices)
+        for method_args, remote in zip(method_args_list, target_remotes):
+            remote.send(("env_method_arg", (method_name, method_args)))
         return [remote.recv() for remote in target_remotes]
 
     def env_is_wrapped(self, wrapper_class: Type[gym.Wrapper], indices: VecEnvIndices = None) -> List[bool]:
