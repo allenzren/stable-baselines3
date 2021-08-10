@@ -136,6 +136,13 @@ class SubprocVecEnv(VecEnv):
         obs = [remote.recv() for remote in self.remotes]
         return _flatten_obs(obs, self.observation_space)
 
+    # New
+    def reset_arg(self, args_list) -> VecEnvObs:
+        for args, remote in zip(args_list, self.remotes):
+            remote.send(("reset", args))
+        obs = [remote.recv() for remote in self.remotes]
+        return _flatten_obs(obs, self.observation_space)
+
     def close(self) -> None:
         if self.closed:
             return
