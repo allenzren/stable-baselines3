@@ -48,9 +48,6 @@ def _worker(
             elif cmd == "env_method":
                 method = getattr(env, data[0])
                 remote.send(method(*data[1], **data[2]))
-            elif cmd == "env_method_arg":
-                method = getattr(env, data[0])
-                remote.send(method(*data[1]))
             elif cmd == "get_attr":
                 remote.send(getattr(env, data))
             elif cmd == "set_attr":
@@ -186,11 +183,11 @@ class SubprocVecEnv(VecEnv):
         return [remote.recv() for remote in target_remotes]
 
     # New
-    def env_method_arg(self, method_name: str, method_args_list, indices: VecEnvIndices = None) -> List[Any]:
+    def env_method_arg(self, method_name: str, method_args_list, indices: VecEnvIndices = None, **method_kwargs) -> List[Any]:
         """Call instance methods of vectorized environments."""
         target_remotes = self._get_target_remotes(indices)
         for method_args, remote in zip(method_args_list, target_remotes):
-            remote.send(("env_method_arg", (method_name, method_args)))
+            remote.send(("env_method", (method_name, method_args, method_kwargs)))
         return [remote.recv() for remote in target_remotes]
 
     def env_is_wrapped(self, wrapper_class: Type[gym.Wrapper], indices: VecEnvIndices = None) -> List[bool]:
