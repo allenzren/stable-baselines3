@@ -19,6 +19,8 @@ def _worker(remote: mp.connection.Connection,
             env_fn_wrapper: CloudpickleWrapper) -> None:
     # Import here to avoid a circular import
     from stable_baselines3.common.env_util import is_wrapped
+    import torch
+    torch.set_num_threads(1)
 
     parent_remote.close()
     env = env_fn_wrapper.var()
