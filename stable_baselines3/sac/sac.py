@@ -288,6 +288,8 @@ class SAC(OffPolicyAlgorithm):
         self.logger.record("train/entropy", np.mean(entropies))
         if len(ent_coef_losses) > 0:
             self.logger.record("train/ent_coef_loss", np.mean(ent_coef_losses))
+        self.logger.dump(step=self.num_timesteps)
+
 
     def learn(
         self,

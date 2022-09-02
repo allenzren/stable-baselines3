@@ -11,6 +11,7 @@ import numpy as np
 import pandas
 import torch as th
 from matplotlib import pyplot as plt
+from copy import deepcopy
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -516,6 +517,14 @@ class Logger:
         for _format in self.output_formats:
             if isinstance(_format, KVWriter):
                 _format.write(self.name_to_value, self.name_to_excluded, step)
+
+        # hack
+        if 'eval/mean_reward' in self.name_to_value.keys():
+            self.eval_rollout_record_copy = deepcopy(self.name_to_value)
+        elif 'train/n_updates' in self.name_to_value.keys():
+            self.train_record_copy = deepcopy(self.name_to_value)
+        else:
+            self.train_rollout_record_copy = deepcopy(self.name_to_value)
 
         self.name_to_value.clear()
         self.name_to_count.clear()

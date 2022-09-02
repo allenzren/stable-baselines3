@@ -365,7 +365,8 @@ class OffPolicyAlgorithm(BaseAlgorithm):
                 if gradient_steps > 0:
                     self.train(batch_size=self.batch_size, gradient_steps=gradient_steps)
 
-        callback.on_training_end()
+                #!
+                callback.on_training_end()
 
         return self
 
