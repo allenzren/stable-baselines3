@@ -202,6 +202,7 @@ class TD3(OffPolicyAlgorithm):
         if len(actor_losses) > 0:
             self.logger.record("train/actor_loss", np.mean(actor_losses))
         self.logger.record("train/critic_loss", np.mean(critic_losses))
+        self.logger.dump(step=self.num_timesteps)
 
     def learn(
         self,
